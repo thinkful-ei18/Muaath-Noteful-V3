@@ -66,6 +66,7 @@ router.post('/notes', (req, res, next) => {
     res.status(500).json({ message: 'Internal server error' });
   });
 
+  
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
