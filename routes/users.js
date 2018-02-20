@@ -80,8 +80,6 @@ router.post('/users', (req, res, next) => {
   let { username, password, fullname = '' } = req.body;
   fullname = fullname.trim();
 
-  const newUser = { username, password, fullname };
-
   // Remove explicit hashPassword if using pre-save middleware
   return User.hashPassword(password)
     .then(digest => {
