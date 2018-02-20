@@ -1,11 +1,14 @@
 'use strict';
 
-const mongoose = require('mongoose');
 const express = require('express');
 const morgan = require('morgan');
+const mongoose = require('mongoose');
 
 const { PORT, MONGODB_URI } = require('./config');
+
 const notesRouter = require('./routes/notes');
+const foldersRouter = require('./routes/folders');
+const tagsRouter = require('./routes/tags');
 
 // Create an Express application
 const app = express();
@@ -23,6 +26,8 @@ app.use(express.json());
 
 // Mount router on "/api"
 app.use('/v3', notesRouter);
+app.use('/v3', foldersRouter);
+app.use('/v3', tagsRouter);
 
 // Catch-all 404
 app.use(function (req, res, next) {
@@ -42,19 +47,23 @@ app.use(function (err, req, res, next) {
 });
 
 // Listen for incoming connections
-mongoose.connect(MONGODB_URI)
-  .then(instance => {
-    const conn = instance.connections[0];
-    console.info(`Connected to: mongodb://${conn.host}:${conn.port}/${conn.name}`);
-  })
-  .catch(err => {
-    console.error(`ERROR: ${err.message}`);
-    console.error('\n === Did you remember to start `mongod`? === \n');
+if (require.main === module) {
+  mongoose.connect(MONGODB_URI)
+    .then(instance => {
+      const conn = instance.connections[0];
+      console.info(`Connected to: mongodb://${conn.host}:${conn.port}/${conn.name}`);
+    })
+    .catch(err => {
+      console.error(`ERROR: ${err.message}`);
+      console.error('\n === Did you remember to start `mongod`? === \n');
+      console.error(err);
+    });
+    
+  app.listen(PORT, function () {
+    console.info(`Server listening on ${this.address().port}`);
+  }).on('error', err => {
     console.error(err);
   });
+}
 
-app.listen(PORT, function () {
-  console.info(`Server listening on ${this.address().port}`);
-}).on('error', err => {
-  console.error(err);
-});
+module.exports = app; // Export for testing

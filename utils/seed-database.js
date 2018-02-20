@@ -1,31 +1,54 @@
+'use strict';
+
 const mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
 
 const { MONGODB_URI } = require('../config');
 const Note = require('../models/note');
+const Folder = require('../models/folder');
+const Tag = require('../models/tag');
 
 const seedNotes = require('../db/seed/notes');
+const seedFolders = require('../db/seed/folders');
+const seedTags = require('../db/seed/tags');
+console.log(seedTags);
+console.log(MONGODB_URI);
 
 mongoose.connect(MONGODB_URI)
+  .then(() => mongoose.connection.db.dropDatabase())
+
+  // In Serial
+  // .then(() => Note.insertMany(seedNotes))
+  // .then(() => Folder.insertMany(seedFolders))
+  // .then(() => Tag.insertMany(seedTags))
+  // .then(() => Note.createIndexes())
+  // .then(() => Folder.createIndexes())
+  // .then(() => Tag.createIndexes())
+  // .then(() => mongoose.disconnect())  
+
+  // In Parallel 
   .then(() => {
-    return mongoose.connection.db.dropDatabase()
-      .then(result => {
-        console.info(`Dropped Database: ${result}`);
-      });
+    return Promise.all([
+      Note.insertMany(seedNotes),
+      Folder.insertMany(seedFolders),
+      Tag.insertMany(seedTags),
+      Note.createIndexes(),
+      Folder.createIndexes(),
+      Tag.createIndexes()
+    ]);
   })
-  .then(() => {
-    return Note.insertMany(seedNotes)
-      .then(results => {
-        console.info(`Inserted ${results.length} Notes`);
-      });
-  })
-  .then(() => {
-    return mongoose.disconnect()
-      .then(() => {
-        console.info('Disconnected');
-      });
-  })
+  .then(() => mongoose.disconnect())
   .catch(err => {
     console.error(`ERROR: ${err.message}`);
     console.error(err);
   });
+
+
+Note.on('index', function (err) {
+  console.log('notes index is done building');
+});
+Folder.on('index', function (err) {
+  console.log('folder index is done building');
+});
+Tag.on('index', function (err) {
+  console.log('tag index is done building');
+});

@@ -4,112 +4,152 @@ const express = require('express');
 const router = express.Router();
 
 const mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
 
 const Note = require('../models/note');
 
-/* ========== GET/READ ALL ITEM ========== */
+/* ========== GET/READ ALL ITEMS ========== */
 router.get('/notes', (req, res, next) => {
-  const { searchTerm } = req.query;
+  const { searchTerm, folderId, tagId } = req.query;
 
   let filter = {};
-
-  if (searchTerm) {
+  /**
+   * Use RegEx ($regex) Operator to find documents where title contain searchTerm
+   *  title : {$regex: re}
+   * 
+   * BONUS CHALLENGE - Search both title and content using $OR Operator
+   *   filter.$or = [{ 'title': { $regex: re } }, { 'content': { $regex: re } }];
+  */
+  
+  /* if (searchTerm) {
     const re = new RegExp(searchTerm, 'i');
     filter.title = { $regex: re };
+  } */
+
+  let projection = {};
+  let sort = 'created'; // default sorting
+
+  // if querying by searchTerm, then add to filter
+  if (searchTerm) {
+    filter.$text = { $search: searchTerm };
+    projection.score = { $meta: 'textScore' };
+    sort = projection;
   }
-console.log(filter);
-  return Note.find(filter)
-    // .select('title created')
-    // .sort('created')
+
+  // if querying by folder, then add to filter
+  if (folderId) {
+    filter.folderId = folderId;
+  }
+
+  // if querying by tags, then add to filter
+  if (tagId) {
+    filter.tags = tagId;
+  }
+
+  Note.find(filter, projection)
+    .select('title content created folderId tags')
+    .populate('tags')
+    .sort(sort)
     .then(results => {
       res.json(results);
     })
-    .catch(console.error);
+    .catch(next);
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/notes/:id', (req, res, next) => {
+  const { id } = req.params;
 
-  const id = req.params.id;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
 
   Note.findById(id)
-  .then(note => res.json(note))
-  .catch(err=> {
-    console.error(err);
-    res.status(500).json({ message: 'Internal server error' });
-  });
-
+    .select('title content created folderId tags')
+    .populate('tags')
+    .then(result => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
+    .catch(next);
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/notes', (req, res, next) => {
+  const { title, content, folderId, tags } = req.body;
 
-  const requiredFields = ['title', 'content'];
-  for (let i =0; i < requiredFields.length; i++){
-    const field = requiredFields[i];
-    if(!(field in req.body)){
-      const message = `You are missing ${field} in req body`;
-      console.error(message);
-      return res.status(400).send(message);
-
-    }
+  /***** Never trust users - validate input *****/
+  if (!title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
   }
-  Note
-  .create({
-    title: req.body.title,
-    content: req.body.content
-  })
-  .then(result => res.status(201).json(result))
-  .catch(err => {
-    console.error(err);
-    res.status(500).json({ message: 'Internal server error' });
-  });
 
-  
+  const newItem = { title, content, tags };
+
+  Note.create(newItem)
+    .then(result => {
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+    })
+    .catch(next);
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/notes/:id', (req, res, next) => {
+  const { id } = req.params;
+  const { title, content, folderId, tags } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    const message = (
-      `Request path id (${req.params.id})`);
-    console.error(message);
-    return res.status(400).json({ message: message });
+  /***** Never trust users - validate input *****/
+  if (!title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
   }
 
-  const toUpdate = {};
-  const updateableFields = ['title', 'content'];
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
 
-  updateableFields.forEach(field=>{
-    if(field in req.body){
-      toUpdate[field] = req.body[field];
-    }
-  });
-
-  Note
-  .findByIdAndUpdate(req.params.id, {$set: toUpdate})
-  .then(result => res.status(204).end())
-  .catch(err => {
-    console.error(err);
-    res.status(500).json({ message: 'Internal server error' });
-  });
+  const updateItem = { title, content, tags };
   
+  if (mongoose.Types.ObjectId.isValid(folderId)) {
+    updateItem.folderId = folderId;
+  }
 
+  const options = { new: true };
+
+  Note.findByIdAndUpdate(id, updateItem, options)
+    .select('id title content folderId tags')
+    .populate('tags')
+    .then(result => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
+    .catch(next);
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/notes/:id', (req, res, next) => {
+  const { id } = req.params;
 
-  Note
-  .findByIdAndRemove(req.params.id)
-  .then(result => res.status(204).end())
-  .catch(err => {
-    console.error(err);
-    res.status(500).json({ message: 'Internal server error' });
-  });
-
+  Note.findByIdAndRemove(id)
+    .then(count => {
+      if (count) {
+        res.status(204).end();
+      } else {
+        next();
+      }
+    })
+    .catch(next);
 });
 
 module.exports = router;
