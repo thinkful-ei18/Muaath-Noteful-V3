@@ -1,5 +1,4 @@
 'use strict';
-<<<<<<< HEAD
 const express = require('express');
 
 const User = require('../models/user');
@@ -101,28 +100,6 @@ router.post('/users', (req, res, next) => {
       }
       next(err);
     });
-=======
-
-const express = require('express');
-const bodyParser = require('body-parser');
-
-const  User  = require('../models/user');
-
-const router = express.Router();
-
-router.use(bodyParser.json());
-
-router.post('/users', (req, res)=> {
-    // Username and password were validated as pre-trimmed
-  let { username, password, fullName} = req.body;
-    const newUser = {username, password, fullName};
-
-    return User.create(newUser)
-    .then(result => {
-        return res.status(201).json(result);
-    })
-    .catch(err => {err.status = 400;});
->>>>>>> 32c21e9117c917bbb5ffd451aeecf6cda33bf566
 });
 
 module.exports = router;

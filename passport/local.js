@@ -37,8 +37,4 @@ const localStrategy = new LocalStrategy((username, password, done) => {
     });
 });
 
-<<<<<<< HEAD
 module.exports = localStrategy;
-=======
-module.exports = localStrategy;
->>>>>>> 32c21e9117c917bbb5ffd451aeecf6cda33bf566

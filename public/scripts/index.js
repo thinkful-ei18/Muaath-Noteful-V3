@@ -4,10 +4,6 @@
 $(document).ready(function () {
   noteful.bindEventListeners();
 
-<<<<<<< HEAD
-  noteful.render();
-  
-=======
   api.search('/v3/notes')
     .then(response => {
       store.notes = response;
@@ -26,6 +22,5 @@ $(document).ready(function () {
       noteful.render();
     });
 
->>>>>>> 32c21e9117c917bbb5ffd451aeecf6cda33bf566
 });
 
