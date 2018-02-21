@@ -11,7 +11,11 @@ mongoose.connect(MONGODB_URI)
     return Note.find({ $text: { $search: 'ways' } },{ score: { $meta: 'textScore' } })
       .sort({ score: { $meta: 'textScore' } })
       .then(results => {
+<<<<<<< HEAD
         console.info(results);
+=======
+        console.log(results);
+>>>>>>> 32c21e9117c917bbb5ffd451aeecf6cda33bf566
       });
   })
   .then(() => {

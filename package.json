@@ -10,11 +10,12 @@
 	"main": "server.js",
 	"scripts": {
 		"start": "node server.js",
-		"test": "cross-env NODE_ENV=test mocha --exit",
+		"test": "cross-env NODE_ENV=test mocha --exit --bail",
 		"cover": "nyc --reporter=lcov --reporter=text-summary npm test"
 	},
 	"dependencies": {
 		"bcryptjs": "^2.4.3",
+<<<<<<< HEAD
 		"dotenv": "^5.0.0",
 		"express": "^4.16.2",
 		"jsonwebtoken": "^8.1.1",
@@ -22,6 +23,12 @@
 		"morgan": "^1.9.0",
 		"passport": "^0.4.0",
 		"passport-jwt": "^3.0.1",
+=======
+		"express": "^4.16.2",
+		"mongoose": "^5.0.4",
+		"morgan": "^1.9.0",
+		"passport": "^0.4.0",
+>>>>>>> 32c21e9117c917bbb5ffd451aeecf6cda33bf566
 		"passport-local": "^1.0.0"
 	},
 	"devDependencies": {
