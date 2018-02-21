@@ -1,5 +1,7 @@
 'use strict';
 
+require('dotenv').config();
+
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
@@ -8,6 +10,7 @@ const passport = require('passport');
 const { PORT, MONGODB_URI } = require('./config');
 const localStrategy = require('./passport/local');
 
+const jwtStrategy = require('./passport/jwt');
 const notesRouter = require('./routes/notes');
 const foldersRouter = require('./routes/folders');
 const tagsRouter = require('./routes/tags');
@@ -30,10 +33,15 @@ app.use(express.json());
 
 // Utilize the given `strategy`
 passport.use(localStrategy);
+passport.use(jwtStrategy);
 
 // Mount routers
 app.use('/v3', usersRouter);
 app.use('/v3', authRouter);
+
+//jwt passport needts to be after users and auth routers.
+app.use(passport.authenticate('jwt', { session: false, failWithError: true }));
+
 app.use('/v3', notesRouter);
 app.use('/v3', foldersRouter);
 app.use('/v3', tagsRouter);
