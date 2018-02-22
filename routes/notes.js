@@ -9,7 +9,7 @@ const Note = require('../models/note');
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/notes', (req, res, next) => {
-  const userId = req.user.id;
+  const {userId} = req.user.id;
   const { searchTerm, folderId, tagId } = req.query;
 
   let filter = {};
@@ -90,7 +90,6 @@ router.post('/notes', (req, res, next) => {
 
   Note.create(newItem)
     .then(result => {
-      console.log(result);
       res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
     })
     .catch(next);
@@ -115,7 +114,7 @@ router.put('/notes/:id', (req, res, next) => {
     return next(err);
   }
 
-  const updateItem = { title, content, tags};
+  const updateItem = { title, content, tags, userId};
   
   if (mongoose.Types.ObjectId.isValid(folderId)) {
     updateItem.folderId = folderId;
@@ -139,8 +138,8 @@ router.put('/notes/:id', (req, res, next) => {
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/notes/:id', (req, res, next) => {
   const { id } = req.params;
-
-  Note.findByIdAndRemove(id)
+  const {userId} = req.user.id;
+  Note.findByIdAndRemove(id, userId)
     .then(count => {
       if (count) {
         res.status(204).end();
