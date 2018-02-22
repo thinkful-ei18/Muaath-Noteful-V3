@@ -9,22 +9,11 @@ const Note = require('../models/note');
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/notes', (req, res, next) => {
+  const userId = req.user.id;
   const { searchTerm, folderId, tagId } = req.query;
 
   let filter = {};
-  /**
-   * Use RegEx ($regex) Operator to find documents where title contain searchTerm
-   *  title : {$regex: re}
-   * 
-   * BONUS CHALLENGE - Search both title and content using $OR Operator
-   *   filter.$or = [{ 'title': { $regex: re } }, { 'content': { $regex: re } }];
-  */
-  
-  /* if (searchTerm) {
-    const re = new RegExp(searchTerm, 'i');
-    filter.title = { $regex: re };
-  } */
-
+ 
   let projection = {};
   let sort = 'created'; // default sorting
 
@@ -45,6 +34,10 @@ router.get('/notes', (req, res, next) => {
     filter.tags = tagId;
   }
 
+  if(userId){
+    filter.userId = userId;
+  }
+
   Note.find(filter, projection)
     .select('title content created folderId tags')
     .populate('tags')
@@ -58,6 +51,7 @@ router.get('/notes', (req, res, next) => {
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/notes/:id', (req, res, next) => {
   const { id } = req.params;
+  const userId = req.user.id;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error('The `id` is not valid');
@@ -65,7 +59,7 @@ router.get('/notes/:id', (req, res, next) => {
     return next(err);
   }
 
-  Note.findById(id)
+  Note.findOne({ _id: id, userId })
     .select('title content created folderId tags')
     .populate('tags')
     .then(result => {
@@ -78,9 +72,12 @@ router.get('/notes/:id', (req, res, next) => {
     .catch(next);
 });
 
+
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/notes', (req, res, next) => {
-  const { title, content, folderId, tags } = req.body;
+  const userId = req.user.id;
+  const { title, content, folderId, tags} = req.body;
+  
 
   /***** Never trust users - validate input *****/
   if (!title) {
@@ -89,10 +86,11 @@ router.post('/notes', (req, res, next) => {
     return next(err);
   }
 
-  const newItem = { title, content, folderId, tags };
+  const newItem = { title, content, folderId, tags, userId };
 
   Note.create(newItem)
     .then(result => {
+      console.log(result);
       res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
     })
     .catch(next);
@@ -101,6 +99,7 @@ router.post('/notes', (req, res, next) => {
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/notes/:id', (req, res, next) => {
   const { id } = req.params;
+  const userId = req.user.id;
   const { title, content, folderId, tags } = req.body;
 
   /***** Never trust users - validate input *****/
@@ -116,7 +115,7 @@ router.put('/notes/:id', (req, res, next) => {
     return next(err);
   }
 
-  const updateItem = { title, content, tags };
+  const updateItem = { title, content, tags};
   
   if (mongoose.Types.ObjectId.isValid(folderId)) {
     updateItem.folderId = folderId;

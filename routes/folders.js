@@ -10,6 +10,7 @@ const Note = require('../models/note');
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/folders', (req, res, next) => {
+  const userId = req.user.id;
   Folder.find()
     .sort('name')
     .then(results => {
