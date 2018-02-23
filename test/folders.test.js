@@ -244,7 +244,7 @@ describe('Before and After hooks', function () {
         'id': '111111111111111111111101',
         'name': 'Something'
       };
-      const id = '1111111111111111111111011';
+      const id = '111111111111111111111101';
       return chai.request(app)
         .put(`/v3/Folders/${id}`)
         .send(updateItem)
@@ -253,7 +253,7 @@ describe('Before and After hooks', function () {
           const res = err.response;
           expect(res).to.have.status(400);
           expect(res.body).to.be.a('object');
-          expect(res.body.message).to.equal('1111111111111111111111011 is not a valid ID');
+          expect(res.body.message).to.equal('111111111111111111111101 is not a valid ID');
         });
     });
 
