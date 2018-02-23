@@ -131,7 +131,7 @@ describe('Before and After hooks', function () {
     it('should return a message and error status 400 if id does not match mongoId', function () {
       return chai
         .request(app)
-        .get('/v3/folders/1111111111111111111111000')
+        .get('/v3/folders/111111111111111111111100')
         .set('Authorization', `Bearer ${token}`)
         .catch(err => {
           const res = err.response; 
@@ -140,18 +140,6 @@ describe('Before and After hooks', function () {
         });
     });
 
-    it('should return a 404 error is id is not valid', function () {
-      return chai
-        .request(app)
-        .get('/v3/folders/111111111111111111111109')
-        .set('Authorization', `Bearer ${token}`)
-        .catch(err => {
-          const res = err.response;
-          expect(res).to.have.status(404);
-          expect(res.body.message).to.equal('111111111111111111111109 is not a valid ID');
-        });
-    });
-  });
 
   describe('POST /v3/folders', function () {
     it('should create and return a new folder when provided with valid data', function () {
@@ -341,3 +329,4 @@ describe('Before and After hooks', function () {
 
 });
 
+});
