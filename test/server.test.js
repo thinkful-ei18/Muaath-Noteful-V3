@@ -3,6 +3,10 @@ const app = require('../server');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const chaiSpies = require('chai-spies');
+const jwt = require('jsonwebtoken');
+
+const { TEST_MONGODB_URI, JWT_SECRET } = require('../config');
+
 
 const expect = chai.expect;
 

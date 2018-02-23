@@ -4,8 +4,10 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const chaiSpies = require('chai-spies');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 
-const { TEST_MONGODB_URI } = require('../config');
+const { TEST_MONGODB_URI, JWT_SECRET } = require('../config');
+
 
 const Note = require('../models/note');
 const Folder = require('../models/folder');

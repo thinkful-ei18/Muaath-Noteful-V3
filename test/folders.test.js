@@ -4,8 +4,10 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const chaiSpies = require('chai-spies');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 
-const { TEST_MONGODB_URI } = require('../config');
+const { TEST_MONGODB_URI, JWT_SECRET } = require('../config');
 
 const Folder = require('../models/folder');
 const seedFolders = require('../db/seed/folders');
@@ -16,15 +18,27 @@ const expect = chai.expect;
 chai.use(chaiHttp);
 chai.use(chaiSpies);
 
-describe('Noteful API - Folders', function () {
+const fullname = 'Example User';
+const username = 'exampleUser';
+const password = 'examplePass';
+let id;
+let token;
+describe('Before and After hooks', function () {
   before(function () {
-    return mongoose.connect(TEST_MONGODB_URI)
-      .then(() => mongoose.connection.db.dropDatabase());
+    return mongoose.connect(TEST_MONGODB_URI, { autoIndex: false });
   });
-
   beforeEach(function () {
-    return Folder.insertMany(seedFolders)
-      .then(() => Folder.createIndexes());
+    return    User
+      .hashPassword(password)
+      .then(digest => User.create({username, password: digest, fullname }))
+      .then(user => {
+        id = user.id;
+        token = jwt.sign({ user }, JWT_SECRET, { subject: user.username });
+      })
+      .then(
+        Folder.insertMany(seedFolders)
+      )
+      .then(() => Folder.ensureIndexes());
   });
 
   afterEach(function () {
